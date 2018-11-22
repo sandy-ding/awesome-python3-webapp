@@ -28,7 +28,7 @@ async def create_pool(loop, **kw):
             port = kw.get('port', 3306),
             user = kw['user'],
             password = kw['password'],
-            db = kw['db'],
+            db = kw['sdb'],
             charset = kw.get('charset', 'utf8'),
             autocommit = kw.get('autocommit', True),
             maxsize = kw.get('maxsize',10),
@@ -124,12 +124,12 @@ class IntegerField(Field):
 class FloatField(Field):
     
     def __init__(self, name=None, primary_key=False, default=0.0):
-        super().__init__(self, name, 'real', primary_key, default)
+        super().__init__(name, 'real', primary_key, default)
         
 class TextField(Field):
     
     def __init__(self, name=None, default=None):
-        super().__init__(self, name, 'text', False, default)
+        super().__init__(name, 'text', False, default)
 
 #表的属性
 class ModelMetaclass(type):
@@ -178,7 +178,7 @@ class ModelMetaclass(type):
         attrs['__mappings__'] = mappings  #保存属性和列的映射关系
         attrs['__table__'] = tableName
         attrs['__primary_key__'] = primaryKey  #主键属性名
-        attrs['__field__'] = fields  #除主键外的属性名
+        attrs['__fields__'] = fields  #除主键外的属性名
         #构造默认的select, insert, update和delete语句：
         #保存对象的属性到内置的属性名称中
         #反引号的作用是为了避免与sql关键字冲突
@@ -215,7 +215,7 @@ class Model(dict, metaclass = ModelMetaclass):
                 value = field.default() if callable(field.default) else field.default
                 logging.debug('using default value for %s: %s' % (key, str(value)))
                 setattr(self, key, value)
-            return value
+        return value
     
     #classmethod 修饰符对应的函数不需要实例化，不需要 self 参数，
     #但第一个参数需要是表示自身类的 cls 参数，可以来调用类的属性，类的方法，实例化对象等
