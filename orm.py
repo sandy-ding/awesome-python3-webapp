@@ -161,13 +161,13 @@ class ModelMetaclass(type):
                 if v.primary_key:
                     # 找到主键，进入到这里就表示当前为主键，判断在此之前primaryKey是否为真，为真则表示主键不唯一错误。
                     if primaryKey:
-                        raise RuntimeError('Duplicate primary key for field:%s' % k)
+                        raise StandardError('Duplicate primary key for field:%s' % k)
                     primaryKey = k
                 else:
                     #保存非主键的列名
                     fields.append(k)
         if not primaryKey:
-            raise RuntimeError('Primary key not found.')
+            raise StandardError('Primary key not found.')
         #如果找到一个Field属性，就把它保存到一个__mappings__的dict中，同时从类属性中删除该Field属性，
         #否则，容易造成运行时错误（实例的属性会遮盖类的同名属性）
         for k in mappings.keys():  #循环所有的键
