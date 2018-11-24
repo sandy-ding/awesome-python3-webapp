@@ -169,7 +169,7 @@ class RequestHandler(object):
                     # 检查kw中的参数是否和match_info中的重复
                     logging.warning('Duplicate arg name in named arg and kw args: %s' % k)
                 kw[k] = v
-        if self._has_request_args:
+        if self._has_request_arg:
             kw['request'] = request
         # check required kw:
         # check无默认值的关键字参数
@@ -232,7 +232,7 @@ def add_routes(app, module_name):
         fn = getattr(mod, attr)
         # 确保是函数
         if callable(fn):
-            method = getattr(fn, '_method_', None)
+            method = getattr(fn, '__method__', None)
             path = getattr(fn, '__route__', None)
             if method and path:
                 # 对已经修饰过的URL处理函数注册到web服务的路由中

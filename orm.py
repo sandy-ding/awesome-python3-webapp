@@ -19,16 +19,16 @@ def log(sql, args = ()):
 #**kw指的接收不限个数个关键字参数，以dict形式存储参数，这里连接池创建函数传入的是host,port,user等连接的数据库信息
 async def create_pool(loop, **kw):
     logging.info('create database connection pool...')
-    global _pool
+    global __pool
     #连接池由全局变量__pool存储，缺省情况下将编码设置为utf8，自动提交事务
     #调用aiomysql.create_pool函数即可以连接到指定数据库上
     #get()查找dict,找不到用默认值
-    _pool = await aiomysql.create_pool(
+    __pool = await aiomysql.create_pool(
             host = kw.get('host', 'localhost'),
             port = kw.get('port', 3306),
             user = kw['user'],
             password = kw['password'],
-            db = kw['sdb'],
+            db = kw['db'],
             charset = kw.get('charset', 'utf8'),
             autocommit = kw.get('autocommit', True),
             maxsize = kw.get('maxsize',10),
@@ -39,9 +39,9 @@ async def create_pool(loop, **kw):
 #用select函数执行SELECT语句，需要传入SQL语句和SQL参数：
 async def select(sql, args, size = None):
     log(sql, args)
-    global _pool
+    global __pool
     #获取数据库连接
-    async with _pool.get() as conn:
+    async with __pool.acquire() as conn:
         #获取游标,默认游标返回的结果为元组（每一项是另一个元组）,这里可以通过aiomysql.DictCursor指定元组的元素为字典
         async with conn.cursor(aiomysql.DictCursor) as cur:
             #调用游标的execute()方法来执行sql语句,execute()接收两个参数,
@@ -62,7 +62,7 @@ async def select(sql, args, size = None):
 #execute()函数和select()函数所不同的是，cursor对象不返回结果集，而是通过rowcount返回结果数。
 async def execute(sql, args, autocommit=True):
     log(sql)
-    async with _pool.get() as conn:
+    async with __pool.acquire() as conn:
         #如果不是自动提交事务,需要手动启动,但是我发现这个是可以省略的
         if not autocommit:
             await conn.begin()
@@ -161,13 +161,13 @@ class ModelMetaclass(type):
                 if v.primary_key:
                     # 找到主键，进入到这里就表示当前为主键，判断在此之前primaryKey是否为真，为真则表示主键不唯一错误。
                     if primaryKey:
-                        raise RuntimeError('Duplicate primary key for field:%s' % k)
+                        raise StandardError('Duplicate primary key for field:%s' % k)
                     primaryKey = k
                 else:
                     #保存非主键的列名
                     fields.append(k)
         if not primaryKey:
-            raise RuntimeError('Primary key not found.')
+            raise StandardError('Primary key not found.')
         #如果找到一个Field属性，就把它保存到一个__mappings__的dict中，同时从类属性中删除该Field属性，
         #否则，容易造成运行时错误（实例的属性会遮盖类的同名属性）
         for k in mappings.keys():  #循环所有的键

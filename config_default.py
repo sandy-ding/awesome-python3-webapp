@@ -7,7 +7,7 @@ Created on Thu Nov 22 17:08:58 2018
 """
 
 '''
-Default congifurations.
+Default configurations.
 '''
 
 configs = {
@@ -21,5 +21,5 @@ configs = {
         },
         'session':{
                 'secret':'Awesome'
-                }
         }
+}

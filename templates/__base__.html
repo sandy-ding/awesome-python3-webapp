@@ -1,21 +1,8 @@
 <!DOCTYPE html>
-<!--
-{% macro pagination(url, page) %}
-	<ul class="uk-pagination">
-		{% if page.has_previous %}
-			<li><a href="{{ url }}{{ page.page_index - 1}}"><i class="uk-icon-angle-double-left"></i></a></li>
-		{% else %}
-			<li class="uk-disabled"><span><i class="uk-icon-angle-double-left"></i></span></li>
-		{% else %}
-			<li class="uk-disabled"><span><i class="uk-icon-angle-double-right"></i></span></li>
-		{% endif %}
-	</ul>
-<% endmacro %}
--->
 <html>
 <head>
 	<meta charset="utf-8" />
-	# 用于子页面定义一些meta，例如rss feed
+	<!-- # 用于子页面定义一些meta，例如rss feed -->
 	{% block meta %}<!-- block meta -->{% endblock %}
 	<title>{% block title %} ? {% endblock %} - Awesome Python Webapp</title>
 	<link rel="stylesheet" type="text/css" href="/static/css/uikit.min.css">
@@ -26,8 +13,8 @@
 	<script type="text/javascript" src="/static/js/uikit.min.js"></script>
 	<script type="text/javascript" src="/static/js/sticky.min.js"></script>
 	<script type="text/javascript" src="/static/js/vue.min.js"></script>
-	<script type="text/javascript" src="/static/js/awesome.min.js"></script>
-	# 子页面可以在<head>标签关闭前插入JavaScript代码
+	<script type="text/javascript" src="/static/js/awesome.js"></script>
+	<!-- # 子页面可以在<head>标签关闭前插入JavaScript代码 -->
 	{% block beforehead %}<!-- before head -->{% endblock %}
 </head>
 <body>
@@ -46,7 +33,8 @@
 							<a href="#0"><i class="uk-icon-user"></i>{{ __user__.name }}</a>
 							<div class="uk-dropdown uk-dropdown-navbar">
 								<ul class="uk-nav uk-nav-navbar">
-									<li><a href="/signout"><i class="uk-icon-sign-out"></i>登出</a></li>
+									<li><a href="/signout"><i class="uk-icon-sign-out"></i>登出</a>
+									</li>
 								</ul>
 							</div>
 						</li>
@@ -54,7 +42,7 @@
 						<li><a href="/signin"><i class="uk-icon-sign-in"></i>登录</a></li>
 						<li><a href="/register"><i class="uk-icon-edit"></i>注册</a></li>
 					{% endif %}
-					</ul>
+				</ul>
 			</div>
 		</div>
 	</nav>
@@ -77,8 +65,8 @@
 					<a target="_blank" href="http://www.linkedin.com/in/liaoxuefeng" class="uk-icon-button uk-icon-linkedin-square"></a>
 					<a target="_blank" href="https://twitter.com/liaoxuefeng" class="uk-icon-button uk-icon-twitter"></a>
 				</p>
-				<p>Powered by <a href="http://awesome.liaoxuefeng.com">Awesome Python Webapp</a>. Copyright &copy; 2014. [<a href="/magage/" target="_blank">Manage</a></p>
-				<p><a href="http://www.liaoxuefeng.com/" target="_blank">http://www.liaoxuefeng.com/</a>. All rights reserved.</p>
+				<p>Powered by <a href="http://awesome.liaoxuefeng.com">Awesome Python Webapp</a>. Copyright &copy; 2014. [<a href="/manage/" target="_blank">Manage</a>]</p>
+				<p><a href="http://www.liaoxuefeng.com/" target="_blank">www.liaoxuefeng.com/</a>. All rights reserved.</p>
 				<a target="_blank" href="http://www.w3.org/TR/html5/"><i class="uk-icon-html5" style="font-size: 64px; color: #444;"></i></a>
 			</div>
 		</div>
