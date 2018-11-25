@@ -245,7 +245,7 @@ class Model(dict, metaclass = ModelMetaclass):
                 args.extend(limit)
             else:
                 raise ValueError('Invalid limit value: %s' % str(limit))
-        rs = await select(' '.join(sql),args)
+        rs = await select(' '.join(sql), args)
         #返回一个列表。每个元素都是一个dict，相当于一行记录
         #??? [cls(**r)]
         return [cls(**r) for r in rs]
