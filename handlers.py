@@ -10,10 +10,12 @@ Created on Thu Nov 22 17:58:20 2018
 
 import re, time, json, logging, hashlib, base64, asyncio
 
+import markdown2
+
 from aiohttp import web
 
 from webframe import get, post
-from apis import APIError, APIValueError, APIResourceNotFoundError
+from apis import Page, APIError, APIValueError, APIResourceNotFoundError, APIPermissionError
 
 from models import User, Comment, Blog, next_id
 from config import configs
@@ -21,15 +23,33 @@ from config import configs
 COOKIE_NAME = 'awesession'
 _COOKIE_KEY = configs.session.secret
 
+def check_admin(request):
+    if request.__user__ is None or not request.__user__.admin:
+        raise APIPermissionError()
+
+def get_page_index(page_str):
+    p = 1
+    try:
+        p = int(page_str)
+    except ValueError as e:
+        pass
+    if p < 1:
+        p = 1
+    return p
+
 def user2cookie(user, max_age):
     '''
-    generate cookir str by user.
+    generate cookie str by user.
     '''
     # build cookie string by: id-expires-sha1
     expires = str(int(time.time() + max_age))
     s = '%s-%s-%s-%s' % (user.id, user.passwd, expires, _COOKIE_KEY)
     L = [user.id, expires, hashlib.sha1(s.encode('utf-8')).hexdigest()]
     return '-'.join(L)    
+
+def text2html(text):
+    lines = map(lambda s: '<p>%s</p>' % s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'), filter(lambda s: s.strip() != '', text.split('\n')))
+    return ''.join(lines)
 
 async def cookie2user(cookie_str):
     '''
@@ -71,7 +91,20 @@ def index(request):
     	'__template__':'blogs.html',
     	'blogs':blogs
     }
-    
+
+@get('/blog/{id}')
+async def get_blog(id):
+    blog = await Blog.findById(id)
+    comments = await Comment.findAll('blog_id=?', [id], orderBy='created_at desc')
+    for c in comments:
+        c.html_content = text2html(c.content)
+    blog.html_content = markdown2.markdown(blog.content)
+    return {
+            '__template__': 'blog.html',
+            'blog': blog,
+            'comments': comments
+    }
+
 @get('/register')
 def register():
     return{
@@ -118,6 +151,14 @@ def signout(request):
     logging.info('user signed out.')
     return r
 
+@get('/manage/blogs/create')
+def manage_create_blog():
+    return{
+        '__template__': 'manage_blog_edit.html',
+        'id': '',
+        'action': '/api/blogs'
+    }
+
 _RE_EMAIL = re.compile(r'^[a-z0-9\.\-\_]+\@[a-z0-9\-\_]+(\.[a-z0-9\-\_]+){1,4}$')
 _RE_SHA1 = re.compile(r'^[0-9a-f]{40}$')
 
@@ -143,7 +184,25 @@ async def api_register_user(*, email, name, passwd):
     # ??? 为什么max_age !== time() + 86400? 
     r.set_cookie(COOKIE_NAME, user2cookie(user, 86400), max_age=86400, httponly=True)  # httponly指定JS不能获取COOKIE
     user.passwd = '******'  # 清理内存中的passwd
-    r.contnet_type = 'application/json'
+    r.content_type = 'application/json'
     r.body = json.dumps(user, ensure_ascii=False).encode('utf-8')  # 转换成JSON格式
     # 返回r用于register.html网页的JavaScript部分继续执行
     return r
+
+@get('/api/blogs/{id}')
+async def api_get_blog(*, id):
+    blog = await Blog.findById(id)
+    return blog
+
+@post('/api/blogs')
+async def api_create_blog(request, *, name, summary, content):
+    check_admin(request)
+    if not name or not name.strip():
+        raise APIValueError('name', 'name cannot be empty.')
+    if not summary or not summary.strip():
+        raise APIValueError('summary', 'summary cannot be empty.')
+    if not content or not content.strip():
+        raise APIValueError('content', 'content cannot be empty.')
+    blog = Blog(user_id=request.__user__.id, user_name=request.__user__.name, user_image=request.__user__.image, name=name.strip(), summary=summary.strip(), content=content.strip())
+    await blog.save()
+    return blog
